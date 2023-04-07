@@ -5,10 +5,12 @@ from discord.ext import commands
 
 TOKEN = ""
 
+activity = discord.Game(name="!help")
+
 #client = discord.Client(intents=discord.Intents.default())
 intents = discord.Intents.default()
 intents.message_content = True
-bot = commands.Bot(command_prefix='!', intents=intents)
+bot = commands.Bot(command_prefix='!', intents=intents, activity=activity)
 
 @bot.event
 async def on_ready():
@@ -28,6 +30,10 @@ async def gentoo(ctx):
 async def eg(ctx):
     await ctx.send("https://media.tenor.com/CZxSdiSPndsAAAAC/okayeg.gif")
 
+@bot.command(name='source', help='link source github repo')
+async def eg(ctx):
+    await ctx.send("https://github.com/CuBeRJAN/discord-bot")
+
 @bot.command(name='vtip', help='random vtip')
 async def alik_vtip_cmd(ctx):
     await ctx.send(subprocess.check_output(["python3", "alik_vtip.py"], encoding="utf-8"))
@@ -36,6 +42,14 @@ async def alik_vtip_cmd(ctx):
 async def bverse(ctx, book, verse):
     await ctx.send(subprocess.check_output(["python3", "bible.py", book, verse], encoding="utf-8"))
 
+@bot.command(name='ph', help="ph list for category list")
+async def ph(ctx, is_list):
+    if is_list == "list":
+        out = str(subprocess.check_output(["python3", "phub.py", "list"], encoding="utf-8"))[:-1]
+        await ctx.send(out)
+    else:
+        await ctx.send(subprocess.check_output(["python3", "phub.py", "category", is_list], encoding="utf-8"))
+        
 @bot.command(name='linux', help='copypasta')
 async def linux_cmd(ctx):
     await ctx.send("""I'd just like to interject for a moment. What you're referring to as Linux, is in fact, GNU/Linux, or as I've recently taken to calling it, GNU plus Linux. Linux is not an operating system unto itself, but rather another free component of a fully functioning GNU system made useful by the GNU corelibs, shell utilities and vital system components comprising a full OS as defined by POSIX.
