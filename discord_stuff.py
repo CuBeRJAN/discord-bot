@@ -1,28 +1,111 @@
 import discord
+from discord.utils import get
 import subprocess
 import re
 from discord.ext import commands
 
-TOKEN = ""
+# Pure spaghetti code ahead
+
+TOKEN = "" 
+
+ROLE_EMOJIS = [['🍎', "MacOS", 0xFF0000],
+               ['🪟', "Windows", 0x0000FF],
+               ['🐧', "GNU+Linux", 0xFFFFFF],
+               ['✝️', "Křesťanství", 0xFFFFFF],
+               ['☸️', "Buddhismus", 0xFFFFFF],
+               ['☪️', "Islám", 0xFF0000],
+               ['✡️', "Judaismus", 0xFFFFFF],
+               ['😈', "Satanismus", 0xFF0000]]
+
+ROLE_CHANNEL =  # Channel for setting roles (int)
+
+NEWBIE_ROLE =  # Role ID for new members (int)
 
 activity = discord.Game(name="!help")
 
 #client = discord.Client(intents=discord.Intents.default())
 intents = discord.Intents.default()
 intents.message_content = True
+intents.members = True
 bot = commands.Bot(command_prefix='!', intents=intents, activity=activity)
 
 @bot.event
 async def on_ready():
     print(f'{bot.user} has connected to Discord!')
-        
+
+@bot.event
+async def on_member_join(member):
+    await member.add_roles(member.guild.get_role(NEWBIE_ROLE))
+
+@bot.event
+async def on_raw_reaction_add(payload):
+    message = await bot.get_channel(payload.channel_id).fetch_message(payload.message_id)
+    reaction = discord.utils.get(message.reactions, emoji=payload.emoji.name)
+    user = payload.member
+    if 'role:' in reaction.message.content and reaction.message.author == bot.user and user != bot.user:
+        for role in ROLE_EMOJIS:
+            if reaction.emoji == role[0]:
+                role_name = role[1]
+                role_color = role[2]
+                check_for_duplicate = get(reaction.message.author.guild.roles, name=role_name)
+        if check_for_duplicate is None: # if the role doesn't exist
+            role = await reaction.message.author.guild.create_role(name=role_name, colour=discord.Colour(role_color))
+        else:
+            role = check_for_duplicate
+        await user.add_roles(role)
+
+@bot.event
+async def on_raw_reaction_remove(payload):
+    message = await bot.get_channel(payload.channel_id).fetch_message(payload.message_id)
+    reaction = discord.utils.get(message.reactions, emoji=payload.emoji.name)
+    guild = await bot.fetch_guild(payload.guild_id)
+    user = await guild.fetch_member(payload.user_id)
+    if 'role:' in reaction.message.content and reaction.message.author == bot.user and user != bot.user:
+        for role in ROLE_EMOJIS:
+            if reaction.emoji == role[0]:
+                role_name = role[1]
+                role_color = role[2]
+                check_for_duplicate = get(reaction.message.author.guild.roles, name=role_name)
+        if check_for_duplicate is None: # if the role doesn't exist
+            role = await reaction.message.author.guild.create_role(name=role_name, colour=discord.Colour(role_color))
+        else:
+            role = check_for_duplicate
+        await user.remove_roles(role)
+            
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def make_role(ctx, text, *emojis):
+    channel = bot.get_channel(ROLE_CHANNEL)
+    msg = await channel.send(text)
+    
+    for emoji in emojis:
+        await msg.add_reaction(emoji)
+
+@bot.command(name='poll', help='poll "text here" :emoji1: :emoji2: (use unicode emojis)')
+async def poll(ctx, text, *emojis):
+    msg = await ctx.send(text)
+    for emoji in emojis:
+        await msg.add_reaction(emoji)
+    
+@bot.command(hidden=True)
+@commands.has_permissions(administrator=True)
+async def server_id(ctx):
+    print(ctx.channel.guild.id)
+
+@bot.command(hidden=True)
+@commands.has_permissions(administrator=True)
+async def roles(ctx):
+    print(", ".join([str(r.id) for r in ctx.guild.roles]))
+    print(", ".join([str(r.name) for r in ctx.guild.roles]))
+    
+
 @bot.command(name='reddit', help='send random image from specified subreddit')
 async def reddit(ctx, subreddit):
     s = str(subprocess.check_output(["python3", "red.py", subreddit, "100"], encoding="utf-8")).split("||")
     await ctx.send(s[0])
     await ctx.send(s[1])
 
-@bot.command(name='gentoo', help='install gentoo')
+@bot.command(name='gentoo', help='install gentoo', hidden=True)
 async def gentoo(ctx):
     await ctx.send("install gentoo")
 
@@ -32,7 +115,7 @@ async def eg(ctx):
 
 @bot.command(name='source', help='link source github repo')
 async def eg(ctx):
-    await ctx.send("https://github.com/CuBeRJAN/discord-bot")
+    await ctx.send("<https://github.com/CuBeRJAN/discord-bot>")
 
 @bot.command(name='vtip', help='random vtip')
 async def alik_vtip_cmd(ctx):
