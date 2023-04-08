@@ -8,18 +8,37 @@ from discord.ext import commands
 
 TOKEN = "" 
 
-ROLE_EMOJIS = [['🍎', "MacOS", 0xFF0000],
-               ['🪟', "Windows", 0x0000FF],
-               ['🐧', "GNU+Linux", 0xFFFFFF],
+ROLE_EMOJIS = [['macos', "MacOS", 0xFF0000],
+               ['windows', "Windows", 0x0000FF],
+               ['linux', "GNU+Linux", 0xFFFFFF],
                ['✝️', "Křesťanství", 0xFFFFFF],
                ['☸️', "Buddhismus", 0xFFFFFF],
                ['☪️', "Islám", 0xFF0000],
                ['✡️', "Judaismus", 0xFFFFFF],
-               ['😈', "Satanismus", 0xFF0000]]
+               ['😈', "Satanismus", 0xFF0000],
+               ['minecraft', "Minecraft", 0x00FF00],
+               ['lol', "League of Legends", 0xFFD700],
+               ['csgo', "CS: GO", 0xFFFFFF],
+               ['rbr', "RBR", 0xFFA500],
+               ['valorant', "Valorant", 0xFF0000],
+               ['lidl', "Lidl role", 0xFFFFFF],
+               ['emacs', "Emacs", 0xA020F0],
+               ['vscode', "VS Code", 0x0000FF],
+               ['vim', "Vim", 0x00FF00],
+               ['🟣', "Fialová", 0xB053F3],
+               ['🔴', "Červená", 0xFF0000],
+               ['⚪', "Bílá", 0xFFFFFF],
+               ['🟢', "Zelená", 0x00FF00],
+               ['🔵', "Modrá", 0x4444FF],
+               ['⚫', "Černá", 0x000001]
+               ]
 
-ROLE_CHANNEL =  # Channel for setting roles (int)
+BANNED_WORDS = ["sieg", "heil", "nigg", "fagg"]
 
-NEWBIE_ROLE =  # Role ID for new members (int)
+ROLE_CHANNEL = 1094038843457552474 # Channel for setting roles (int)
+ASSIGN_CHANNEL = 1094046575812149299 # Channel for assigning role emojis
+
+NEWBIE_ROLE = 1093589166752813139 # Role ID for new members (int)
 
 activity = discord.Game(name="!help")
 
@@ -38,13 +57,27 @@ async def on_member_join(member):
     await member.add_roles(member.guild.get_role(NEWBIE_ROLE))
 
 @bot.event
+async def on_message(message):
+    for word in BANNED_WORDS:
+        if word in message.content.casefold():
+            await message.delete()
+    await bot.process_commands(message)
+            
+
+@bot.event
 async def on_raw_reaction_add(payload):
     message = await bot.get_channel(payload.channel_id).fetch_message(payload.message_id)
-    reaction = discord.utils.get(message.reactions, emoji=payload.emoji.name)
+    emoji = discord.utils.get(message.guild.emojis, name=payload.emoji.name)
+    if emoji:
+        emoji_s = payload.emoji.name
+    else:
+        emoji = payload.emoji.name
+        emoji_s = emoji
+    reaction = discord.utils.get(message.reactions, emoji=emoji)
     user = payload.member
     if 'role:' in reaction.message.content and reaction.message.author == bot.user and user != bot.user:
         for role in ROLE_EMOJIS:
-            if reaction.emoji == role[0]:
+            if emoji_s == role[0]:
                 role_name = role[1]
                 role_color = role[2]
                 check_for_duplicate = get(reaction.message.author.guild.roles, name=role_name)
@@ -57,12 +90,18 @@ async def on_raw_reaction_add(payload):
 @bot.event
 async def on_raw_reaction_remove(payload):
     message = await bot.get_channel(payload.channel_id).fetch_message(payload.message_id)
-    reaction = discord.utils.get(message.reactions, emoji=payload.emoji.name)
+    emoji = discord.utils.get(message.guild.emojis, name=payload.emoji.name)
+    if emoji:
+        emoji_s = payload.emoji.name
+    else:
+        emoji = payload.emoji.name
+        emoji_s = emoji
+    reaction = discord.utils.get(message.reactions, emoji=emoji)
     guild = await bot.fetch_guild(payload.guild_id)
     user = await guild.fetch_member(payload.user_id)
     if 'role:' in reaction.message.content and reaction.message.author == bot.user and user != bot.user:
         for role in ROLE_EMOJIS:
-            if reaction.emoji == role[0]:
+            if emoji_s == role[0]:
                 role_name = role[1]
                 role_color = role[2]
                 check_for_duplicate = get(reaction.message.author.guild.roles, name=role_name)
@@ -72,7 +111,7 @@ async def on_raw_reaction_remove(payload):
             role = check_for_duplicate
         await user.remove_roles(role)
             
-@bot.command()
+@bot.command(hidden=True)
 @commands.has_permissions(administrator=True)
 async def make_role(ctx, text, *emojis):
     channel = bot.get_channel(ROLE_CHANNEL)
@@ -86,6 +125,10 @@ async def poll(ctx, text, *emojis):
     msg = await ctx.send(text)
     for emoji in emojis:
         await msg.add_reaction(emoji)
+
+@bot.command(name='yt', help='youtube search')
+async def poll(ctx, *terms):
+    await ctx.send(str(subprocess.check_output(["python3", "yt.py", " ".join(terms)]))[2:][:-3])
     
 @bot.command(hidden=True)
 @commands.has_permissions(administrator=True)
@@ -101,9 +144,13 @@ async def roles(ctx):
 
 @bot.command(name='reddit', help='send random image from specified subreddit')
 async def reddit(ctx, subreddit):
-    s = str(subprocess.check_output(["python3", "red.py", subreddit, "100"], encoding="utf-8")).split("||")
+    nsfw = "sfw"
+    if ctx.channel.is_nsfw():
+        nsfw = "nsfw"
+    s = str(subprocess.check_output(["python3", "red.py", subreddit, "100", nsfw], encoding="utf-8")).split("||")
     await ctx.send(s[0])
-    await ctx.send(s[1])
+    if len(s)>1:
+        await ctx.send(s[1])
 
 @bot.command(name='gentoo', help='install gentoo', hidden=True)
 async def gentoo(ctx):
@@ -127,11 +174,14 @@ async def bverse(ctx, book, verse):
 
 @bot.command(name='ph', help="ph list for category list")
 async def ph(ctx, is_list):
-    if is_list == "list":
-        out = str(subprocess.check_output(["python3", "phub.py", "list"], encoding="utf-8"))[:-1]
-        await ctx.send(out)
+    if ctx.channel.is_nsfw():
+        if is_list == "list":
+            out = str(subprocess.check_output(["python3", "phub.py", "list"], encoding="utf-8"))[:-1]
+            await ctx.send(out)
+        else:
+            await ctx.send(subprocess.check_output(["python3", "phub.py", "category", is_list], encoding="utf-8"))
     else:
-        await ctx.send(subprocess.check_output(["python3", "phub.py", "category", is_list], encoding="utf-8"))
+        await ctx.send("This command can only be used in NSFW channels.")
         
 @bot.command(name='linux', help='copypasta')
 async def linux_cmd(ctx):

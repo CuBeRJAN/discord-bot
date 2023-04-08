@@ -15,13 +15,16 @@ userN = ''
 userP =''
 reddit = praw.Reddit(user_agent=userAgent, client_id=cID, client_secret=cSC, username=userN, password=userP)
 
-def get_random_image(subreddit_name, maxpost):
+def get_random_image(subreddit_name, maxpost, nsfw):
     subreddit = reddit.subreddit(subreddit_name)
+    if subreddit.over18 and nsfw!="nsfw":
+        print("This subreddit can only be used in NSFW channels.")
+        return
     i = 0
     postn = random.randint(0, maxpost)
-    for post in subreddit.stream.submissions():
-        if not post.is_self:
-            if i == postn:
+    for post in subreddit.hot(limit=maxpost):
+        if not post.is_self and ((subreddit.over18 and nsfw=="nsfw") or not subreddit.over18):
+            if i > postn:
                 if "https://imgur.com" in post.url: # not tested
                     r = requests.get(post.url)
                     soup = BeautifulSoup(r.text, 'lxml')
@@ -39,9 +42,10 @@ def get_random_image(subreddit_name, maxpost):
                     print ("".join([f"\n\"{post.title.replace('||','')}\" by u/{post.author}||", post.url]))
                     return
                 break
+        if i > maxpost:
+            break
+        i += 1
+    print("Failed to fetch image.")
+    return
 
-            if i > maxpost:
-                break
-            i += 1
-
-get_random_image(sys.argv[1], int(sys.argv[2]))
+get_random_image(sys.argv[1], int(sys.argv[2]), sys.argv[3])
