@@ -15,10 +15,14 @@ userN = ''
 userP =''
 reddit = praw.Reddit(user_agent=userAgent, client_id=cID, client_secret=cSC, username=userN, password=userP)
 
-def get_random_image(subreddit_name, maxpost, nsfw):
+def get_random_image(subreddit_name, maxpost, nsfw): # Who needs caching anyway?
     subreddit = reddit.subreddit(subreddit_name)
-    if subreddit.over18 and nsfw!="nsfw":
-        print("This subreddit can only be used in NSFW channels.")
+    try:
+        if subreddit.over18 and nsfw!="nsfw":
+            print("This subreddit can only be used in NSFW channels.")
+            return
+    except:
+        print("That subreddit doesn't seem to exist.")
         return
     i = 0
     postn = random.randint(0, maxpost)

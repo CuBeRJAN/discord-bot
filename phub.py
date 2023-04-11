@@ -37,3 +37,5 @@ if sys.argv[1] == "list":
     category_list()
 elif sys.argv[1] == "category":
     by_category_name(sys.argv[2])
+elif sys.argv[1] == "rand":
+    print(random_category().category)
