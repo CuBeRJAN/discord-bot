@@ -228,13 +228,13 @@ async def chords(ctx, scale, n=4):
         i += interval
         f_scale.append(d_notes[root_i + i])
     chords = []
-    minor_third = d_notes[d_notes.index(f_scale[i])+3]
-    major_third = d_notes[d_notes.index(f_scale[i])+4]
-    minor_seventh = d_notes[d_notes.index(f_scale[i])+10]
-    major_seventh = d_notes[d_notes.index(f_scale[i])+11]
-    fifth = d_notes[d_notes.index(f_scale[i])+7]
-    diminished_fifth = d_notes[d_notes.index(f_scale[i])+6]
     for i in range(0, len(f_scale), +1): # Append chords
+        minor_third = d_notes[d_notes.index(f_scale[i])+3]
+        major_third = d_notes[d_notes.index(f_scale[i])+4]
+        minor_seventh = d_notes[d_notes.index(f_scale[i])+10]
+        major_seventh = d_notes[d_notes.index(f_scale[i])+11]
+        fifth = d_notes[d_notes.index(f_scale[i])+7]
+        diminished_fifth = d_notes[d_notes.index(f_scale[i])+6]
         if minor_third in f_scale and fifth in f_scale: # minor
             chords.append(str(f_scale[i] + "m"))
         if major_third in f_scale and fifth in f_scale: # major
