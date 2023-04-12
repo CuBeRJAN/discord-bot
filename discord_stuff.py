@@ -228,13 +228,25 @@ async def chords(ctx, scale, n=4):
         i += interval
         f_scale.append(d_notes[root_i + i])
     chords = []
+    minor_third = d_notes[d_notes.index(f_scale[i])+3]
+    major_third = d_notes[d_notes.index(f_scale[i])+4]
+    minor_seventh = d_notes[d_notes.index(f_scale[i])+10]
+    major_seventh = d_notes[d_notes.index(f_scale[i])+11]
+    fifth = d_notes[d_notes.index(f_scale[i])+7]
+    diminished_fifth = d_notes[d_notes.index(f_scale[i])+6]
     for i in range(0, len(f_scale), +1): # Append chords
-        if d_notes[d_notes.index(f_scale[i])+3] in f_scale and d_notes[d_notes.index(f_scale[i])+7] in f_scale:
+        if minor_third in f_scale and fifth in f_scale: # minor
             chords.append(str(f_scale[i] + "m"))
-        elif d_notes[d_notes.index(f_scale[i])+4] in f_scale and d_notes[d_notes.index(f_scale[i])+7] in f_scale:
+        if major_third in f_scale and fifth in f_scale: # major
             chords.append(str(f_scale[i]))
-        elif d_notes[d_notes.index(f_scale[i])+3] in f_scale and d_notes[d_notes.index(f_scale[i])+6] in f_scale:
+        if minor_third in f_scale and diminished_fifth in f_scale: # diminished
             chords.append(str(f_scale[i] + "dim"))
+        if minor_third in f_scale and diminished_fifth in f_scale and minor_seventh in f_scale: # diminished seventh
+            chords.append(str(f_scale[i] + "dim7"))
+        if minor_third in f_scale and minor_seventh in f_scale: # minor seventh
+            chords.append(str(f_scale[i] + "m7"))
+        if major_third in f_scale and major_seventh in f_scale: # major seventh
+            chords.append(str(f_scale[i] + "7"))
     prog = []
     choice = ""
     for i in range(0, n, +1):
@@ -299,7 +311,7 @@ async def cowsay(ctx, *words_t):
     words = list(words_t)
     for i in range(0, len(words), +1):
         words[i] = words[i].replace("'","\'").replace('""', '\"')
-    if len(words) > 1 and words[0] == '-f' and words[1] == 'sodomized' and (ctx.channel.is_nsfw() == False):
+    if 'sodomized' in words and not ctx.channel.is_nsfw():
         await ctx.send("That cowsay is a bit too nsfw!")
         return
     s = ["cowsay"] + list(words)
