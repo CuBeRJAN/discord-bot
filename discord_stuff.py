@@ -235,17 +235,17 @@ async def chords(ctx, scale, n=4):
         major_seventh = d_notes[d_notes.index(f_scale[i])+11]
         fifth = d_notes[d_notes.index(f_scale[i])+7]
         diminished_fifth = d_notes[d_notes.index(f_scale[i])+6]
-        if minor_third in f_scale and fifth in f_scale: # minor
+        if set([minor_third, fifth]) <= set(f_scale): # minor
             chords.append(str(f_scale[i] + "m"))
-        if major_third in f_scale and fifth in f_scale: # major
+        if set([major_third, fifth]) <= set(f_scale): # major
             chords.append(str(f_scale[i]))
-        if minor_third in f_scale and diminished_fifth in f_scale: # diminished
+        if set([minor_third, diminished_fifth]) <= set(f_scale): # diminished
             chords.append(str(f_scale[i] + "dim"))
-        if minor_third in f_scale and diminished_fifth in f_scale and minor_seventh in f_scale: # diminished seventh
+        if set([minor_third, diminished_fifth, minor_seventh]) <= set(f_scale): # diminished seventh
             chords.append(str(f_scale[i] + "dim7"))
-        if minor_third in f_scale and minor_seventh in f_scale: # minor seventh
+        if set([minor_third, fifth, minor_seventh]) <= set(f_scale): # minor seventh
             chords.append(str(f_scale[i] + "m7"))
-        if major_third in f_scale and major_seventh in f_scale: # major seventh
+        if set([major_third, fifth, major_seventh]) <= set(f_scale): # major seventh
             chords.append(str(f_scale[i] + "7"))
     prog = []
     choice = ""
